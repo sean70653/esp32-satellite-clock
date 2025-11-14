@@ -5,7 +5,7 @@
     information on the screen and outputs the information to the serial port simultaneously.
  * @Author: LILYGO_L
  * @Date: 2024-07-19 18:02:07
- * @LastEditTime: 2024-07-19 18:11:17
+ * @LastEditTime: 2025-11-14 11:53:01
  * @License: GPL 3.0
  */
 #include <Arduino.h>
@@ -42,6 +42,37 @@ Arduino_GFX *gfx = new Arduino_AXS15231(bus, LCD_RST /* RST */, 0 /* rotation */
 std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
     std::make_shared<Arduino_HWIIC>(TOUCH_IICSDA, TOUCH_IICSCL, &Wire);
 
+bool WriteC8D8(uint8_t c, uint8_t d)
+{
+    if (Wire.write(c) == false)
+    {
+        log_e("->Write(c) fail");
+        return false;
+    }
+    if (Wire.write(d) == false)
+    {
+        log_e("->Write(d) fail");
+        return false;
+    }
+    return true;
+}
+
+bool IIC_WriteC8D8(uint8_t device_address, uint8_t c, uint8_t d)
+{
+    Wire.beginTransmission(device_address);
+    if (WriteC8D8(c, d) == false)
+    {
+        log_e("->WriteC8D8(c, d) fail");
+        return false;
+    }
+    if (!(Wire.endTransmission()) == false)
+    {
+        log_e("->EndTransmission() fail");
+        return false;
+    }
+    return true;
+}
+
 void AXS15231_Touch(void)
 {
     Touch_INT = true;
@@ -69,6 +100,11 @@ void setup()
     digitalWrite(TOUCH_RES, HIGH);
     delay(2);
     IIC_Bus->begin();
+
+    // Disable the ILIM pin and set the input current limit to maximum.
+    IIC_WriteC8D8(0x6A, 0x00, 0B00111111);
+    // Turn off the BATFET without using the battery.
+    IIC_WriteC8D8(0x6A, 0x09, 0B01100100);
 
     gfx->begin();
     gfx->fillScreen(WHITE);
