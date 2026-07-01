@@ -1,4 +1,4 @@
-<h1 align = "center">🌟T-Display-S3-Long🌟</h1> 
+<h1 align = "center">🌟Satellite Image Clock🌟</h1> 
 
 
 ![ESP32 Satellite Clock Display Demo](./images/demo.gif)
