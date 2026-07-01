@@ -1,6 +1,6 @@
 <h1 align = "center">🌟T-Display-S3-Long🌟</h1> 
 
-## 1️⃣Product
+## Product
 
 | Product(PinMap)        | SOC        | Flash | PSRAM    | Resolution |
 | ---------------------- | ---------- | ----- | -------- | ---------- |
@@ -12,20 +12,7 @@
 
 [1]:https://www.lilygo.cc/products/t-display-s3-long
 
-
-## 2️⃣Examples
-
-```txt
-examples/
-├── Factory                 # Factory example
-├── tft                     # Tft example
-├── touch                   # Touchpad example
-├── QWIIC_Sensor            # QWIIC Wire example
-├── GFX_AXS15231B_Image       # Screen and touch test example
-└── lvgl_demo               # LVGL examples  
-```
-
-## 3️⃣ PlatformIO Quick Start (Recommended)
+## PlatformIO Quick Start (Recommended)
 
 1. Install [Visual Studio Code](https://code.visualstudio.com/) and [Python](https://www.python.org/)
 2. Search for the `PlatformIO` plugin in the `VisualStudioCode` extension and install it.
@@ -40,56 +27,130 @@ examples/
 11. Click (plug symbol) to monitor serial output
 12. If it cannot be written, or the USB device keeps flashing, please check the **FAQ** below
 
-## 4️⃣ Arduino IDE Quick Start
+## Satellite Image Clock
 
-* It is recommended to use platformio without cumbersome steps
+This project turns the T-Display-S3-Long into a **live satellite cloud-map clock**. It periodically downloads satellite imagery from Taiwan's Central Weather Administration (CWA), animates the frames as a dynamic background, and overlays the current date & time.
 
-1. Install [Arduino IDE](https://www.arduino.cc/en/software)
-2. Download or clone project `T-Display-S3-Long`
-3. Copy all the files in `T-Display-S3-Long/lib` and paste them into Arduion library folder(e.g. C:\Users\YourName\Documents\Arduino\libraries).
-4. Open Arduino IDE, select the `examples\xxx` example of project `T-Display-S3-Long` throught `"File->Open"`.
-5. Configuration of board is as follows:
+### Features
 
-![setting](images/ArduinoIDE.jpg)
+- **WiFi auto-connect** — Scans available networks, connects using pre-configured credentials, and synchronizes time via NTP.
+- **Animated satellite background** — Maintains 18 frames of satellite imagery (each 20 minutes apart, covering 6 hours), cycling at 2 frames per second (old → new). The most recent frame is offset by 20 minutes to avoid fetching images not yet available on the server.
+- **On-device JPEG decode & crop** — Downloads the original 2750×2750 CWA JPEG, crops the center strip (2750×773), and scales it down to 640×180 to fit the rotated display. All done in streaming fashion with minimal memory overhead.
+- **Date & time overlay** — Displays `YYYY Month DD, Weekday, HH:MM:SS` in the bottom-right corner using Montserrat 36 font, with a separate date line in Montserrat 14.
+- **Smart scheduling** — Downloads new satellite images at **xx:01**, **xx:21**, and **xx:41** each hour, reusing previously downloaded frames by shifting the buffer. Only one new image is fetched per update.
+- **Robust retry logic** — Initial download retries failed frames across multiple rounds with increasing delays. Periodic updates retry up to 5 times per new frame.
+- **Debug frame timestamp** — Optionally displays the capture time of the current satellite frame in the top-right corner (Montserrat 8 font).
 
-6. Select `Port`
-7. Click `upload` , Wait for compilation and writing to complete
-8. If it cannot be written, or the USB device keeps flashing, please check the **FAQ** below
+### How It Works
 
-# 5️⃣ ESP32 basic examples
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  CWA Server                                                         │
+│  https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/               │
+│  LCC_TRGB_2750-YYYY-MM-DD-HH-MM.jpg  (2750×2750, ~1–1.6 MB)       │
+└──────────────────┬───────────────────────────────────────────────────┘
+                   │ HTTPS download (FreeRTOS background task, Core 0)
+                   ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  ESP32-S3  (PSRAM)                                                   │
+│                                                                      │
+│  1. Download JPEG into 2 MB buffer                                   │
+│  2. Streaming decode with TJpgDec (ROM built-in)                     │
+│  3. Crop center strip: y=988, h=773 from 2750×2750                  │
+│  4. Nearest-neighbor scale: 2750×773 → 640×180                      │
+│  5. Convert RGB888 → RGB565 (byte-swapped for LV_COLOR_16_SWAP)    │
+│  6. Store in one of 18 frame slots (each 640×180×2 = 225 KB)        │
+│                                                                      │
+│  Total PSRAM for frames: 18 × 225 KB ≈ 3.96 MB                     │
+│  JPEG buffer: 2 MB                                                   │
+│  Total: ~6 MB of 8 MB PSRAM                                         │
+└──────────────────┬───────────────────────────────────────────────────┘
+                   │ LVGL timer (500 ms)
+                   ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  180×640 Display (rotated 90°→ 640×180 logical)                     │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │                     Satellite cloud map                        │  │
+│  │                     (animated background)                      │  │
+│  │                                              [frame time] ──┐ │  │
+│  │                                                             │ │  │
+│  │                                    2025 July 7, Wed ──────┐ │ │  │
+│  │                                            10:07:22 ──────┘ │ │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
-* [BLE Examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/BLE)
-* [WiFi Examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi)
-* [SPIFFS Examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/SPIFFS)
-* [FFat Examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/FFat)
-* For more examples of esp32 chip functions, please refer to [arduino-esp32-libraries](https://github.com/espressif/arduino-esp32/tree/master/libraries)
+### Configuration
 
-# 6️⃣ FAQ
+All user-configurable settings are in the header files under `examples/satellite_img_clock/`.
 
-1. The board uses USB as the JTAG upload port. When printing serial port information on USB_CDC_ON_BOOT configuration needs to be turned on.
-If the port cannot be found when uploading the program or the USB has been used for other functions, the port does not appear.
-Please enter the upload mode manually.
+#### WiFi & Time Settings (`pins_config.h`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `WIFI_SSID` | `"YOUR_SSID"` | Your WiFi network name |
+| `WIFI_PASSWORD` | `"YOUR_WIFI_PASSWORD"` | Your WiFi password |
+| `WIFI_CONNECT_WAIT_MAX` | `30000` (ms) | Max time to wait for WiFi connection |
+| `NTP_SERVER1` | `"pool.ntp.org"` | Primary NTP server |
+| `NTP_SERVER2` | `"time.nist.gov"` | Fallback NTP server |
+| `CUSTOM_TIMEZONE` | `"CST-8"` | POSIX timezone string. `"CST-8"` = UTC+8 (Taiwan/China). See [timezone list](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv) for other regions. |
+
+#### Satellite Download Settings (`satellite.h`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `SAT_FRAME_COUNT` | `18` | Number of satellite frames to keep in memory. Each frame uses ~225 KB PSRAM. Max ~28 frames on 8 MB PSRAM. |
+| `SAT_FRAME_W` | `640` | Output frame width in pixels (matches display logical width) |
+| `SAT_FRAME_H` | `180` | Output frame height in pixels (matches display logical height) |
+| `SAT_SRC_SIZE` | `2750` | Original CWA image dimension (2750×2750) |
+| `SAT_CROP_H` | `773` | Height of the center crop from the original image, calculated as `2750 × (180/640)` |
+| `SAT_CROP_Y_START` | `988` | Top pixel row of the crop region, calculated as `(2750 − 773) / 2` |
+| `SAT_URL_BASE` | `"https://www.cwa.gov.tw/..."` | Base URL for CWA satellite imagery |
+| `SAT_JPEG_BUF_SIZE` | `2097152` (2 MB) | JPEG download buffer size. Daytime images can reach ~1.6 MB. |
+
+#### UI & Debug Settings (`satellite_img_clock_gui.h`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `SAT_SHOW_FRAME_TIME` | `1` | Set to `1` to show the capture time of the current satellite frame in the top-right corner (debug aid). Set to `0` to hide it. |
+
+### Frame Update Schedule
+
+- On boot, all 18 frames are downloaded at 20-minute intervals, starting from 20 minutes before the current time (to avoid fetching images not yet published by CWA). For example, at 09:00, the frames cover 08:40, 08:20, 08:00, ..., down to 03:00.
+- After the initial download, updates happen at **xx:01**, **xx:21**, and **xx:41** each hour:
+  - The oldest frame is discarded.
+  - All existing frames shift by one slot.
+  - Only the newest frame (e.g. xx:00, xx:20, or xx:40) is downloaded.
+- This means each downloaded image is reused across multiple update cycles, minimizing network traffic.
+
+### Memory Usage
+
+| Resource | Usage |
+|---|---|
+| Frame buffers | 18 × 230,400 bytes = **~3.96 MB** (PSRAM) |
+| JPEG download buffer | **2 MB** (PSRAM) |
+| Total PSRAM | **~6 MB** of 8 MB |
+| Flash | ~1.2 MB of 3 MB |
+| SRAM | ~64 KB of 320 KB |
+
+### FAQ
+
+1. The board uses USB as the JTAG upload port. When printing serial port information on USB_CDC_ON_BOOT configuration needs to be turned on. If the port cannot be found when uploading the program or the USB has been used for other functions, the port does not appear. Please enter the upload mode manually.
    1. Connect the board via the USB cable
-   2. Press and hold the BOOT button , While still pressing the BOOT button, press RST
+   2. Press and hold the BOOT button, While still pressing the BOOT button, press RST
    3. Release the RST
    4. Release the BOOT button
    5. Upload sketch
 
-2. If the above is invalid, burn the [binary file](./firmware/README.MD)  to check whether the hardware is normal
-3. The OTG external power supply function requires turning on the PMU OTG enablement ,If the USB input is connected and the OTG is set to output, the battery will not be charged.
-   ```c
-         PMU.enableOTG();  //Enable OTG Power output
-         PMU.disableOTG(); //Disable OTG Power output
-   ```
-4. Turning the physical switch to OFF will completely disconnect the battery from the motherboard. When charging is required, turn the switch to ON.
-5. When the battery is not connected and the USB is plugged in, the board's LED status indicator light will flash. You can use `PMU.disableStatLed();` to turn off the indicator light, but this means that if the battery is connected for charging, the LED light will also be disabled. If you need to enable the charging status indicator, please call `PMU.enableStatLed();`
+2. **No serial output?** — Make sure `platformio.ini` has `monitor_speed = 115200` and `build_flags` includes `-DARDUINO_USB_CDC_ON_BOOT=1`.
 
+3. **Images show wrong colors?** — `LV_COLOR_16_SWAP` must be set to `1` in `lib/lv_conf.h`. The decode pipeline byte-swaps RGB565 to match.
 
-# 7️⃣ Depends on required libraries
+4. **Background freezes but clock keeps running?** — Check serial log for download errors. Common causes: WiFi disconnect, CWA server temporary unavailability, or insufficient JPEG buffer size. The device will resume downloading on the next scheduled update.
 
+### Dependencies
 
 **Do not upgrade the LVGL version, the lvgl software rotation has been forced to open.**
 
 * [lvgl 8.3.0](https://github.com/lvgl/lvgl)
 * [XPowersLib](https://github.com/lewisxhe/XPowersLib)
-
