@@ -15,21 +15,6 @@
 
 [1]:https://www.lilygo.cc/products/t-display-s3-long
 
-## PlatformIO Quick Start (Recommended)
-
-1. Install [Visual Studio Code](https://code.visualstudio.com/) and [Python](https://www.python.org/)
-2. Search for the `PlatformIO` plugin in the `VisualStudioCode` extension and install it.
-3. After the installation is complete, you need to restart `VisualStudioCode`
-4. After restarting `VisualStudioCode`, select `File` in the upper left corner of `VisualStudioCode` -> `Open Folder` -> select the `T-Display-S3-Long` directory
-5. Wait for the installation of third-party dependent libraries to complete
-6. Click on the `platformio.ini` file, and in the `platformio` column
-7. Uncomment one of the lines `src_dir = xxxx` to make sure only one line works
-8. Click the (✔) symbol in the lower left corner to compile
-9. Connect the board to the computer USB
-10. Click (→) to upload firmware
-11. Click (plug symbol) to monitor serial output
-12. If it cannot be written, or the USB device keeps flashing, please check the **FAQ** below
-
 ## Satellite Image Clock
 
 This project turns the T-Display-S3-Long into a **live satellite cloud-map clock**. It periodically downloads satellite imagery from Taiwan's Central Weather Administration (CWA), animates the frames as a dynamic background, and overlays the current date & time.
@@ -150,6 +135,21 @@ All user-configurable settings are in the header files under `examples/satellite
 3. **Images show wrong colors?** — `LV_COLOR_16_SWAP` must be set to `1` in `lib/lv_conf.h`. The decode pipeline byte-swaps RGB565 to match.
 
 4. **Background freezes but clock keeps running?** — Check serial log for download errors. Common causes: WiFi disconnect, CWA server temporary unavailability, or insufficient JPEG buffer size. The device will resume downloading on the next scheduled update.
+
+## PlatformIO Quick Start (Recommended)
+
+1. Install [Visual Studio Code](https://code.visualstudio.com/) and [Python](https://www.python.org/)
+2. Search for the `PlatformIO` plugin in the `VisualStudioCode` extension and install it.
+3. After the installation is complete, you need to restart `VisualStudioCode`
+4. After restarting `VisualStudioCode`, select `File` in the upper left corner of `VisualStudioCode` -> `Open Folder` -> select the `T-Display-S3-Long` directory
+5. Wait for the installation of third-party dependent libraries to complete
+6. Click on the `platformio.ini` file, and in the `platformio` column
+7. Uncomment one of the lines `src_dir = xxxx` to make sure only one line works
+8. Click the (✔) symbol in the lower left corner to compile
+9. Connect the board to the computer USB
+10. Click (→) to upload firmware
+11. Click (plug symbol) to monitor serial output
+12. If it cannot be written, or the USB device keeps flashing, please check the **FAQ** below
 
 ### Dependencies
 
