@@ -1,5 +1,8 @@
 <h1 align = "center">🌟T-Display-S3-Long🌟</h1> 
 
+
+![ESP32 Satellite Clock Display Demo](./images/demo.gif)
+
 ## Product
 
 | Product(PinMap)        | SOC        | Flash | PSRAM    | Resolution |
