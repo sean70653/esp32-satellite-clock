@@ -3,18 +3,6 @@
 
 ![ESP32 Satellite Clock Display Demo](./images/demo.gif)
 
-## Product
-
-| Product(PinMap)        | SOC        | Flash | PSRAM    | Resolution |
-| ---------------------- | ---------- | ----- | -------- | ---------- |
-| [T-Display-S3-Long][1] | ESP32-S3R8 | 16MB  | 8MB(OPI) | 180x640    |
-
-| Current consumption    | Working current             | sleep current | sleep mode  |
-| ---------------------- | --------------------------- | ------------- | ----------- |
-| [T-Display-S3-Long][1] | (240MHz) WiFi On 90~350+ mA | About 1.1mA   | gpio wakeup |
-
-[1]:https://www.lilygo.cc/products/t-display-s3-long
-
 ## Satellite Image Clock
 
 This project turns the T-Display-S3-Long into a **live satellite cloud-map clock**. It periodically downloads satellite imagery from Taiwan's Central Weather Administration (CWA), animates the frames as a dynamic background, and overlays the current date & time.
@@ -135,6 +123,18 @@ All user-configurable settings are in the header files under `examples/satellite
 3. **Images show wrong colors?** — `LV_COLOR_16_SWAP` must be set to `1` in `lib/lv_conf.h`. The decode pipeline byte-swaps RGB565 to match.
 
 4. **Background freezes but clock keeps running?** — Check serial log for download errors. Common causes: WiFi disconnect, CWA server temporary unavailability, or insufficient JPEG buffer size. The device will resume downloading on the next scheduled update.
+
+## Product
+
+| Product(PinMap)        | SOC        | Flash | PSRAM    | Resolution |
+| ---------------------- | ---------- | ----- | -------- | ---------- |
+| [T-Display-S3-Long][1] | ESP32-S3R8 | 16MB  | 8MB(OPI) | 180x640    |
+
+| Current consumption    | Working current             | sleep current | sleep mode  |
+| ---------------------- | --------------------------- | ------------- | ----------- |
+| [T-Display-S3-Long][1] | (240MHz) WiFi On 90~350+ mA | About 1.1mA   | gpio wakeup |
+
+[1]:https://www.lilygo.cc/products/t-display-s3-long
 
 ## PlatformIO Quick Start (Recommended)
 
