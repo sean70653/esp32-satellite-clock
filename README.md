@@ -92,7 +92,7 @@ All user-configurable settings are in the header files under `examples/satellite
 
 ### Frame Update Schedule
 
-- On boot, all 18 frames are downloaded at 20-minute intervals, starting from 20 minutes before the current time (to avoid fetching images not yet published by CWA). For example, at 09:00, the frames cover 08:40, 08:20, 08:00, ..., down to 03:00.
+- On boot, all 18 frames are downloaded at 20-minute intervals, starting from 40 minutes before the current time (to avoid fetching images not yet published by CWA). For example, at 09:00, the frames cover 08:20, 08:00, 08:00, ..., down to 02:40.
 - After the initial download, updates happen at **xx:01**, **xx:21**, and **xx:41** each hour:
   - The oldest frame is discarded.
   - All existing frames shift by one slot.
